@@ -1,11 +1,12 @@
 package com.techullurgy.chess.di
 
 import androidx.room.Room
-import com.techullurgy.chess.data.ChessGameApi
+import com.techullurgy.chess.data.ChessGameApiImpl
 import com.techullurgy.chess.data.GameRepositoryImpl
 import com.techullurgy.chess.data.GameRoomMessageBroker
 import com.techullurgy.chess.data.db.ChessGameDatabase
 import com.techullurgy.chess.data.db.GameDao
+import com.techullurgy.chess.domain.api.ChessGameApi
 import com.techullurgy.chess.domain.repository.GameRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.api.createClientPlugin
@@ -58,8 +59,8 @@ val DataModule = module {
         }
     }
 
-    single {
-        ChessGameApi(
+    single<ChessGameApi> {
+        ChessGameApiImpl(
             socketClient = get<HttpClient>(named("socket")),
             httpClient = get<HttpClient>(named("http")),
         )

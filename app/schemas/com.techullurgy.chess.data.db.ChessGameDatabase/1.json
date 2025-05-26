@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "77f4863a3ea034a0ea0f03c414279b85",
+    "identityHash": "6b833ec3e89cc23697ed8f21401721b1",
     "entities": [
       {
         "tableName": "GameEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`roomId` TEXT NOT NULL, `roomName` TEXT NOT NULL, `createdBy` TEXT NOT NULL, `board` TEXT NOT NULL, `assignedColor` TEXT NOT NULL, `lastMove` TEXT, `isMyTurn` INTEGER NOT NULL, `cutPieces` TEXT, `status` TEXT NOT NULL, `availableMoves` TEXT NOT NULL, `selectedIndex` INTEGER NOT NULL, `gameOver` INTEGER NOT NULL, `kingInCheckIndex` INTEGER, PRIMARY KEY(`roomId`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`roomId` TEXT NOT NULL, `roomName` TEXT NOT NULL, `createdBy` TEXT NOT NULL, `board` TEXT NOT NULL, `members` TEXT NOT NULL, `assignedColor` TEXT NOT NULL, `lastMove` TEXT, `isMyTurn` INTEGER NOT NULL, `cutPieces` TEXT, `status` TEXT NOT NULL, `availableMoves` TEXT NOT NULL, `selectedIndex` INTEGER NOT NULL, `gameOver` INTEGER NOT NULL, `kingInCheckIndex` INTEGER, PRIMARY KEY(`roomId`))",
         "fields": [
           {
             "fieldPath": "roomId",
@@ -29,6 +29,12 @@
           {
             "fieldPath": "board",
             "columnName": "board",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "members",
+            "columnName": "members",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -124,7 +130,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '77f4863a3ea034a0ea0f03c414279b85')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6b833ec3e89cc23697ed8f21401721b1')"
     ]
   }
 }

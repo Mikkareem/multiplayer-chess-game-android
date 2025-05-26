@@ -1,6 +1,7 @@
 package com.techullurgy.chess.data.db
 
 import androidx.room.Dao
+import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Upsert
 import com.techullurgy.chess.domain.GameStatus
@@ -16,10 +17,12 @@ interface GameDao {
                 g.roomName, 
                 g.isMyTurn,
                 2 as membersCount,
-                g.status 
+                g.status,
+                t.whiteTime as yourTime,
+                t.blackTime as opponentTime
         FROM GameEntity g
-        JOIN TimerEntity t
-            ON (g.roomId == t.roomId)
+        LEFT JOIN TimerEntity t
+            ON (g.roomId = t.roomId)
         WHERE status IN (:statuses)
     """)
     fun observeJoinedGamesList(
@@ -27,21 +30,21 @@ interface GameDao {
     ): Flow<List<JoinedGameEntityHeaderProjection>>
 
     @Query("""
-        SELECT g.*, t.* 
+        SELECT g.*, t.blackTime as yourTime, t.whiteTime as opponentTime 
         FROM GameEntity g
-        JOIN TimerEntity t
-            ON (g.roomId == t.roomId)
-        WHERE roomId = :roomId AND status IN (:statuses)
+        LEFT JOIN TimerEntity t
+            ON (g.roomId = t.roomId)
+        WHERE g.roomId = :roomId AND status IN (:statuses)
     """)
     fun observeJoinedGame(
         roomId: String,
         statuses: List<GameStatus> = listOf(GameStatus.Ongoing, GameStatus.Joined)
-    ): Flow<JoinedGameEntityProjection>
+    ): Flow<JoinedGameEntityProjection?>
 
     @Query("""
         SELECT * FROM TimerEntity WHERE roomId = :roomId
     """)
-    fun observeTimerFor(roomId: String): Flow<TimerEntity>
+    fun observeTimerFor(roomId: String): Flow<TimerEntity?>
 
     @Query("""
         UPDATE GameEntity
@@ -96,4 +99,14 @@ interface GameDao {
 
     @Upsert
     suspend fun updateTimer(timer: TimerEntity)
+
+    @Insert
+    suspend fun insertGame(timer: GameEntity)
+
+    @Query("UPDATE GameEntity SET status = :status WHERE roomId = :roomId")
+    suspend fun updateStatus(status: GameStatus, roomId: String)
+
+    // Test Functions
+    @Query("SELECT COUNT(*) FROM TimerEntity")
+    suspend fun timerEntityCount(): Int
 }

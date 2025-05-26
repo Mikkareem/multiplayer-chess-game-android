@@ -2,6 +2,7 @@ package com.techullurgy.chess.data
 
 import com.techullurgy.chess.data.db.GameDao
 import com.techullurgy.chess.data.db.TimerEntity
+import com.techullurgy.chess.domain.api.ChessGameApi
 import com.techullurgy.chess.domain.events.GameLoadingEvent
 import com.techullurgy.chess.domain.events.GameUpdateEvent
 import com.techullurgy.chess.domain.events.ResetSelectionDoneEvent
@@ -22,8 +23,6 @@ internal class GameRoomMessageBroker(
                 if(!it.isEmpty()) {
                     if(!gameApi.isSocketActive) {
                         emit(true)
-                    } else {
-                        emit(false)
                     }
                 } else {
                     emit(false)
@@ -43,7 +42,7 @@ internal class GameRoomMessageBroker(
             .transform {
                 if(it is ServerGameEvent) {
                     when(it) {
-                        is GameLoadingEvent -> TODO()
+                        is GameLoadingEvent -> emit(GameLoadingEvent(it.roomId))
                         is GameUpdateEvent -> {
                             val assignedColor = gameDao.getAssignedColor(it.roomId)
                             gameDao.updateGame(

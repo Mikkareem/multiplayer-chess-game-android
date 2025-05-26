@@ -1,6 +1,8 @@
 package com.techullurgy.chess.domain
 
-data class GameState(
+sealed interface GameState
+
+data class JoinedGameState(
     val roomId: String,
     val roomName: String,
     val members: List<String>,
@@ -12,9 +14,9 @@ data class GameState(
     val cutPieces: List<Piece> = emptyList(),
     val yourTime: Long = 0,
     val opponentTime: Long = 0,
-)
+): GameState
 
-data class GameStateHeader(
+data class JoinedGameStateHeader(
     val roomId: String = "",
     val roomName: String = "",
     val membersCount: Int = 0,
@@ -22,3 +24,5 @@ data class GameStateHeader(
     val yourTime: Long = 0,
     val opponentTime: Long = 0,
 )
+
+data object JoinedGameLoadingState: GameState
