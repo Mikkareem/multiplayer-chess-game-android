@@ -2,9 +2,15 @@ package com.techullurgy.chess.apitest
 
 import com.techullurgy.chess.domain.PieceColor
 import com.techullurgy.chess.domain.api.ChessGameApi
+import com.techullurgy.chess.domain.events.CellSelectionEvent
+import com.techullurgy.chess.domain.events.ClientGameEvent
+import com.techullurgy.chess.domain.events.DisconnectedEvent
+import com.techullurgy.chess.domain.events.EnterRoomEvent
 import com.techullurgy.chess.domain.events.GameEvent
 import com.techullurgy.chess.domain.events.GameLoadingEvent
 import com.techullurgy.chess.domain.events.GameUpdateEvent
+import com.techullurgy.chess.domain.events.PieceMoveEvent
+import com.techullurgy.chess.domain.events.ResetSelectionEvent
 import com.techullurgy.chess.domain.events.ServerGameEvent
 import com.techullurgy.chess.domain.events.TimerUpdateEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -76,5 +82,15 @@ class FakeChessGameApi: ChessGameApi {
 
     override fun stopSession() {
         canStartSession.value = false
+    }
+
+    override fun sendEvent(event: ClientGameEvent) {
+        when(event) {
+            is CellSelectionEvent -> TODO()
+            is DisconnectedEvent -> TODO()
+            is EnterRoomEvent -> TODO()
+            is PieceMoveEvent -> TODO()
+            is ResetSelectionEvent -> TODO()
+        }
     }
 }
