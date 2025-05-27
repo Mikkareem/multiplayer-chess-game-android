@@ -1,5 +1,6 @@
 package com.techullurgy.chess.data
 
+import com.techullurgy.chess.data.dto.GameRoomDto
 import com.techullurgy.chess.data.events.CellSelection
 import com.techullurgy.chess.data.events.Disconnected
 import com.techullurgy.chess.data.events.EnterRoomHandshake
@@ -19,17 +20,21 @@ import com.techullurgy.chess.domain.events.CellSelectionEvent
 import com.techullurgy.chess.domain.events.ClientGameEvent
 import com.techullurgy.chess.domain.events.DisconnectedEvent
 import com.techullurgy.chess.domain.events.EnterRoomEvent
+import com.techullurgy.chess.domain.events.GameEvent
 import com.techullurgy.chess.domain.events.GameLoadingEvent
 import com.techullurgy.chess.domain.events.GameUpdateEvent
+import com.techullurgy.chess.domain.events.NetworkNotAvailableEvent
 import com.techullurgy.chess.domain.events.PieceMoveEvent
 import com.techullurgy.chess.domain.events.ResetSelectionDoneEvent
 import com.techullurgy.chess.domain.events.ResetSelectionEvent
 import com.techullurgy.chess.domain.events.SelectionResultEvent
-import com.techullurgy.chess.domain.events.ServerGameEvent
 import com.techullurgy.chess.domain.events.TimerUpdateEvent
+import com.techullurgy.chess.domain.events.UserDisconnectedEvent
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.client.request.get
 import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
@@ -57,12 +62,18 @@ internal class ChessGameApiImpl(
 
     private var eventChannel: Channel<ReceiverBaseEvent> = Channel()
 
-    private val sessionConnectionFlow: Flow<ServerGameEvent> = channelFlow<ServerGameEvent> {
+    private val sessionConnectionFlow: Flow<GameEvent> = channelFlow<GameEvent> {
         launch {
             try {
-                session = socketClient.webSocketSession(
-                    urlString = "${ChessGameApi.WS_BASE_URL}/join/ws"
-                )
+                try {
+                    session = socketClient.webSocketSession(
+                        urlString = "${ChessGameApi.WS_BASE_URL}/join/ws"
+                    )
+                } catch (e: Exception) {
+                    send(NetworkNotAvailableEvent)
+                    e.printStackTrace()
+                    close()
+                }
 
                 launch {
                     eventChannel.consumeEach {
@@ -106,7 +117,7 @@ internal class ChessGameApiImpl(
                 }
             } catch (e: Exception) {
                 coroutineContext.ensureActive()
-//                send(NetworkNotAvailableEvent)
+                send(UserDisconnectedEvent)
                 e.printStackTrace()
                 close()
             }
@@ -126,7 +137,7 @@ internal class ChessGameApiImpl(
     override val isSocketActive get() = session != null && session!!.isActive
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val gameEventsFlow: Flow<ServerGameEvent> = canStartSession
+    override val gameEventsFlow: Flow<GameEvent> = canStartSession
         .flatMapLatest { enable ->
             if(enable) sessionConnectionFlow
             else flow {}
@@ -151,6 +162,12 @@ internal class ChessGameApiImpl(
         session?.launch {
             eventChannel.send(sendableEvent)
         }
+    }
+
+    override suspend fun fetchAnyJoinedRoomsAvailable(): List<GameRoomDto> {
+        val response = httpClient.get("${ChessGameApi.HTTP_BASE_URL}/rooms/joined")
+        val rooms = response.body<List<GameRoomDto>>()
+        return rooms
     }
 
     private fun <T> Channel<T>.reset(): Channel<T> {

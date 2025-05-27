@@ -5,7 +5,7 @@ import com.techullurgy.chess.domain.JoinedGameStateHeader
 import kotlinx.coroutines.flow.Flow
 
 interface GameRepository {
-    fun getJoinedGamesList(): Flow<List<JoinedGameStateHeader>>
+    fun getJoinedGamesList(): Flow<GameState>
 
     fun getJoinedGame(roomId: String): Flow<GameState>
 }

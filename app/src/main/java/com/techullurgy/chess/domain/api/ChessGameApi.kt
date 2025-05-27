@@ -1,9 +1,8 @@
 package com.techullurgy.chess.domain.api
 
+import com.techullurgy.chess.data.dto.GameRoomDto
 import com.techullurgy.chess.domain.events.ClientGameEvent
 import com.techullurgy.chess.domain.events.GameEvent
-import com.techullurgy.chess.domain.events.ServerGameEvent
-import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.Flow
 
 interface ChessGameApi {
@@ -15,6 +14,8 @@ interface ChessGameApi {
     fun stopSession()
 
     fun sendEvent(event: ClientGameEvent)
+
+    suspend fun fetchAnyJoinedRoomsAvailable(): List<GameRoomDto>
 
     companion object {
         private const val HOST_AND_PORT = "192.168.225.184:8080"

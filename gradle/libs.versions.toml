@@ -7,15 +7,16 @@ junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycle = "2.9.0"
 activityCompose = "1.10.1"
-composeBom = "2025.05.00"
+composeBom = "2025.05.01"
 robolectric = "4.14"
 navigation = "2.9.0"
-datastore = "1.1.6"
+datastore = "1.1.7"
 ksp = "2.1.20-2.0.1"
 room = "2.7.1"
 serialization = "1.8.1"
 koin = "4.0.3"
 ktor = "3.1.3"
+mockk = "1.14.2"
 
 
 [libraries]
@@ -49,7 +50,7 @@ ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "
 ktor-client-websockets = { group = "io.ktor", name = "ktor-client-websockets", version.ref = "ktor" }
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
-
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 
 [bundles]
 koin = ["koin-core", "koin-android", "koin-androidx-compose"]

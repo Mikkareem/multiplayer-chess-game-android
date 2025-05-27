@@ -1,8 +1,11 @@
 package com.techullurgy.chess.data.db
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import com.techullurgy.chess.domain.GameStatus
 import com.techullurgy.chess.data.db.projections.JoinedGameEntityHeaderProjection
@@ -100,13 +103,28 @@ interface GameDao {
     @Upsert
     suspend fun updateTimer(timer: TimerEntity)
 
-    @Insert
-    suspend fun insertGame(timer: GameEntity)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertGame(game: GameEntity)
 
     @Query("UPDATE GameEntity SET status = :status WHERE roomId = :roomId")
     suspend fun updateStatus(status: GameStatus, roomId: String)
 
+    @Query("DELETE FROM GameEntity")
+    suspend fun invalidateRoom()
+
+    @Query("DELETE FROM TimerEntity")
+    suspend fun invalidateTimer()
+
+    @Transaction
+    suspend fun invalidateJoinedRooms() {
+        invalidateTimer()
+        invalidateRoom()
+    }
+
     // Test Functions
     @Query("SELECT COUNT(*) FROM TimerEntity")
     suspend fun timerEntityCount(): Int
+
+    @Query("SELECT COUNT(*) FROM GameEntity")
+    suspend fun gameEntityCount(): Int
 }

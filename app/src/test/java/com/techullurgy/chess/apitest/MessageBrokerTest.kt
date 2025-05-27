@@ -6,17 +6,22 @@ import com.techullurgy.chess.data.GameRepositoryImpl
 import com.techullurgy.chess.data.GameRoomMessageBroker
 import com.techullurgy.chess.data.db.ChessGameDatabase
 import com.techullurgy.chess.data.db.GameDao
-import com.techullurgy.chess.data.db.GameEntity
-import com.techullurgy.chess.domain.GameStatus
-import com.techullurgy.chess.domain.PieceColor
-import com.techullurgy.chess.domain.api.ChessGameApi
-import com.techullurgy.chess.domain.events.TimerUpdateEvent
-import com.techullurgy.chess.domain.repository.GameRepository
+import com.techullurgy.chess.domain.events.GameLoadingEvent
+import com.techullurgy.chess.domain.events.UserDisconnectedEvent
+import io.mockk.every
+import io.mockk.spyk
+import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -29,51 +34,47 @@ class MessageBrokerTest {
 
     private lateinit var database: ChessGameDatabase
     private lateinit var gameDao: GameDao
-    private lateinit var gameBroker: GameRoomMessageBroker
-    private lateinit var gameRepository: GameRepository
-    private lateinit var gameApi: ChessGameApi
 
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(context, ChessGameDatabase::class.java).build()
         gameDao = database.gameDao
-        gameApi = FakeChessGameApi()
-        gameBroker = GameRoomMessageBroker(gameDao, gameApi)
-        gameRepository = GameRepositoryImpl(gameBroker, gameDao, CoroutineScope(SupervisorJob()))
     }
 
     @Test
     fun `we should not connect to websocket when no joined games are available`() = runBlocking {
-        (gameApi as FakeChessGameApi).eventProducer = {
-            send(TimerUpdateEvent(it, 88, 90))
-            delay(1000)
-            send(TimerUpdateEvent(it, 89, 90))
+        val gameApi = spyk(FakeChessGameApi()) {
+            every { this@spyk.sessionConnectionFlow } returns flow {
+                emit(GameLoadingEvent("783"))
+                delay(3000)
+                emit(UserDisconnectedEvent)
+            }
+        }
+        val gameBroker = GameRoomMessageBroker(gameDao, gameApi)
+        val gameRepository = GameRepositoryImpl(gameBroker, gameDao, CoroutineScope(SupervisorJob()))
+
+        val job1 = launch {
+            gameRepository.getJoinedGame("123").collect {
+                println("State: $it")
+            }
         }
 
-        val job = launch {
-            gameRepository.getJoinedGame("123")
+        val job2 = launch {
+            gameRepository.getJoinedGamesList()
                 .collect {
-                    println("Actual $it")
+                    println("List: $it")
                 }
         }
 
-        delay(3000)
-        gameDao.insertGame(
-            GameEntity(
-                roomId = "123",
-                roomName = "Googk",
-                createdBy = "Irsath",
-                board = "",
-                members = "",
-                assignedColor = PieceColor.White,
-                isMyTurn = true,
-                status = GameStatus.Joined
-            )
-        )
-        println("Inserted Joined game for 123")
-
+        verify(exactly = 1) { gameApi.gameEventsFlow }
         delay(4000)
-        job.cancel()
+        println("Cancelling")
+        assert(gameDao.gameEntityCount() == 1)
+        job1.cancelAndJoin()
+        job2.cancelAndJoin()
+
+        delay(10000)
+        assert(gameDao.gameEntityCount() == 0)
     }
 
     @After

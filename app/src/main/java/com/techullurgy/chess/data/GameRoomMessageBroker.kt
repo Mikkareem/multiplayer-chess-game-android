@@ -1,7 +1,10 @@
 package com.techullurgy.chess.data
 
 import com.techullurgy.chess.data.db.GameDao
+import com.techullurgy.chess.data.db.GameEntity
 import com.techullurgy.chess.data.db.TimerEntity
+import com.techullurgy.chess.domain.GameStatus
+import com.techullurgy.chess.domain.PieceColor
 import com.techullurgy.chess.domain.api.ChessGameApi
 import com.techullurgy.chess.domain.events.GameLoadingEvent
 import com.techullurgy.chess.domain.events.GameUpdateEvent
@@ -74,6 +77,23 @@ internal class GameRoomMessageBroker(
                 }
             }
 
+    suspend fun fetchAnyJoinedRoomsAvailable() {
+        val joinedRooms = gameApi.fetchAnyJoinedRoomsAvailable()
+        joinedRooms.forEach {
+            gameDao.insertGame(
+                GameEntity(
+                    roomId = it.roomId,
+                    roomName = it.roomName,
+                    createdBy = "",
+                    board = "",
+                    members = "",
+                    assignedColor = PieceColor.White,
+                    isMyTurn = true,
+                    status = GameStatus.Joined
+                )
+            )
+        }
+    }
 
     private fun observeDesiredGameEntities() =
         gameDao.observeJoinedGamesList()

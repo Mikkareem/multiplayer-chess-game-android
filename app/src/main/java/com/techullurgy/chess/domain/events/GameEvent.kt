@@ -67,4 +67,5 @@ data class ResetSelectionEvent(
 data object NetworkNotAvailableEvent: NetworkRelatedEvent
 data object UserDisconnectedEvent: NetworkRelatedEvent
 data object GameNotAvailableEvent: UnknownEvent
-data object SomethingWetWrongEvent: UnknownEvent
+data object NotYetAnyEventAvailableEvent: UnknownEvent
+data object SomethingWentWrongEvent: UnknownEvent

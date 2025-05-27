@@ -25,4 +25,12 @@ data class JoinedGameStateHeader(
     val opponentTime: Long = 0,
 )
 
+data class JoinedGameStateHeaderList(
+    val value: List<JoinedGameStateHeader>
+): GameState
+
 data object JoinedGameLoadingState: GameState
+data object GameNotAvailableState: GameState
+data object NetworkNotAvailableState: GameState
+data object SomethingWentWrongState: GameState
+data object UserDisconnectedState: GameState
