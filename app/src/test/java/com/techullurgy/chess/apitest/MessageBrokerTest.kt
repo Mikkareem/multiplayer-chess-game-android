@@ -1,29 +1,21 @@
 package com.techullurgy.chess.apitest
 
-import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
-import com.techullurgy.chess.data.GameRepositoryImpl
-import com.techullurgy.chess.data.GameRoomMessageBroker
-import com.techullurgy.chess.data.db.ChessGameDatabase
-import com.techullurgy.chess.data.db.GameDao
-import com.techullurgy.chess.domain.events.GameLoadingEvent
-import com.techullurgy.chess.domain.events.UserDisconnectedEvent
-import io.mockk.every
-import io.mockk.spyk
-import io.mockk.verify
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancelAndJoin
+import com.techullurgy.chess.utils.EmbeddedServiceRule
+import com.techullurgy.chess.utils.Mocking
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.websocket.Frame
+import io.ktor.websocket.close
+import io.ktor.websocket.readText
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.runTest
-import org.junit.After
-import org.junit.Before
+import org.junit.Assert.assertEquals
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -32,53 +24,82 @@ import org.robolectric.RobolectricTestRunner
 class MessageBrokerTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
-    private lateinit var database: ChessGameDatabase
-    private lateinit var gameDao: GameDao
-
-    @Before
-    fun setUp() {
-        database = Room.inMemoryDatabaseBuilder(context, ChessGameDatabase::class.java).build()
-        gameDao = database.gameDao
-    }
+    @get:Rule
+    val rule = EmbeddedServiceRule(context)
 
     @Test
     fun `we should not connect to websocket when no joined games are available`() = runBlocking {
-        val gameApi = spyk(FakeChessGameApi()) {
-            every { this@spyk.sessionConnectionFlow } returns flow {
-                emit(GameLoadingEvent("783"))
-                delay(3000)
-                emit(UserDisconnectedEvent)
+        launch { rule.start() }
+
+        rule.addMockings(
+            Mocking("Good Afternoon Irsath 1") { it == "Good Afternoon: 1" },
+            Mocking("Good Afternoon Irsath 2") { it == "Good Afternoon: 2" },
+            Mocking("Good Afternoon Irsath 3") { it == "Good Afternoon: 3" },
+            Mocking("Good Afternoon Irsath 4") { it == "Good Afternoon: 4" },
+            Mocking("Good Afternoon Irsath 5") { it == "Good Afternoon: 5" },
+        )
+
+        val session = HttpClient().webSocketSession("ws://localhost:8083/join/ws")
+
+        val eventsDeferred = async {
+            session.incoming.consumeAsFlow().toList().map {
+                (it as Frame.Text).readText()
             }
         }
-        val gameBroker = GameRoomMessageBroker(gameDao, gameApi)
-        val gameRepository = GameRepositoryImpl(gameBroker, gameDao, CoroutineScope(SupervisorJob()))
 
-        val job1 = launch {
-            gameRepository.getJoinedGame("123").collect {
-                println("State: $it")
-            }
-        }
+        rule.sendEventToServer(Frame.Text("Good Afternoon: 1"))
+        rule.sendEventToServer(Frame.Text("Good Afternoon: 2"))
+        rule.sendEventToServer(Frame.Text("Good Afternoon: 3"))
+        rule.sendEventToServer(Frame.Text("Good Afternoon: 4"))
+        rule.sendEventToServer(Frame.Text("Good Afternoon: 5"))
 
-        val job2 = launch {
-            gameRepository.getJoinedGamesList()
-                .collect {
-                    println("List: $it")
-                }
-        }
+        delay(10)
 
-        verify(exactly = 1) { gameApi.gameEventsFlow }
-        delay(4000)
-        println("Cancelling")
-        assert(gameDao.gameEntityCount() == 1)
-        job1.cancelAndJoin()
-        job2.cancelAndJoin()
+        session.close()
 
-        delay(10000)
-        assert(gameDao.gameEntityCount() == 0)
+        val events = eventsDeferred.await()
+
+        assertEquals(
+            List(5) { "Good Afternoon Irsath ${it+1}" },
+            events
+        )
     }
 
-    @After
-    fun tearDown() {
-        database.close()
+    @Test
+    fun `we should not connect to websocket when no joined games are not available`() = runBlocking {
+        launch { rule.start() }
+
+        rule.addMockings(
+//            Mocking("Good Afternoon Irsath 1") { it == "Good Afternoon: 1" },
+            Mocking("Good Afternoon Irsath 2") { it == "Good Afternoon: 2" },
+            Mocking("Good Afternoon Irsath 3") { it == "Good Afternoon: 3" },
+            Mocking("Good Afternoon Irsath 4") { it == "Good Afternoon: 4" },
+            Mocking("Good Afternoon Irsath 5") { it == "Good Afternoon: 5" },
+        )
+
+        val session = HttpClient().webSocketSession("ws://localhost:8083/join/ws")
+
+        val eventsDeferred = async {
+            session.incoming.consumeAsFlow().toList().map {
+                (it as Frame.Text).readText()
+            }
+        }
+
+        rule.sendEventToServer(Frame.Text("Good Afternoon: 1"))
+        rule.sendEventToServer(Frame.Text("Good Afternoon: 2"))
+        rule.sendEventToServer(Frame.Text("Good Afternoon: 3"))
+        rule.sendEventToServer(Frame.Text("Good Afternoon: 4"))
+        rule.sendEventToServer(Frame.Text("Good Afternoon: 5"))
+
+        delay(10)
+
+        session.close()
+
+        val events = eventsDeferred.await()
+
+        assertEquals(
+            List(4) { "Good Afternoon Irsath ${it+2}" },
+            events
+        )
     }
 }

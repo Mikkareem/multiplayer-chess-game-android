@@ -14,19 +14,20 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.GlobalContext
 
 
 class OnlineChessGameApplication: Application() {
-
-    val applicationScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onCreate() {
         super.onCreate()
 
         registerNotificationChannel()
 
-        initKoin {
-            androidContext(this@OnlineChessGameApplication)
+        if (GlobalContext.getOrNull() == null) {
+            initKoin {
+                androidContext(this@OnlineChessGameApplication)
+            }
         }
     }
 

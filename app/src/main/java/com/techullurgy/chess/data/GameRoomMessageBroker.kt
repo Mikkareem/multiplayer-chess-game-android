@@ -28,7 +28,9 @@ internal class GameRoomMessageBroker(
                         emit(true)
                     }
                 } else {
-                    emit(false)
+                    if(gameApi.isSocketActive) {
+                        emit(false)
+                    }
                 }
             }
             .distinctUntilChanged()
