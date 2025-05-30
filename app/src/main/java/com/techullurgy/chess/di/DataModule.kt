@@ -83,6 +83,6 @@ val DataModule = module {
     singleOf(::GameRoomMessageBroker)
 
     single<GameRepository> {
-        GameRepositoryImpl(get(), get(), get(named("app_scope")))
+        GameRepositoryImpl(get(), get(), get(), get(named("app_scope")))
     }
 }

@@ -2,7 +2,7 @@ package com.techullurgy.chess.data.events.constants
 
 object BaseEventConstants {
     // SERVER EVENTS
-    const val TYPE_GAME_LOADING = "TYPE_GAME_LOADING"
+    const val TYPE_GAME_STARTED = "TYPE_GAME_STARTED"
     const val TYPE_SELECTION_RESULT = "TYPE_SELECTION_RESULT"
     const val TYPE_RESET_SELECTION_DONE = "TYPE_RESET_SELECTION_DONE"
     const val TYPE_GAME_UPDATE = "TYPE_GAME_UPDATE"

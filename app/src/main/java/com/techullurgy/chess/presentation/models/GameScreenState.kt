@@ -4,6 +4,7 @@ import com.techullurgy.chess.domain.JoinedGameState
 
 sealed interface GameScreenState
 
+data object NetworkLoadingScreenState: GameScreenState
 data object NetworkNotAvailableScreenState: GameScreenState
 data object SomethingWentWrongScreenState: GameScreenState
 data object UserDisconnectedScreenState: GameScreenState

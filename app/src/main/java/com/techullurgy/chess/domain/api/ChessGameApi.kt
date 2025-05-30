@@ -16,6 +16,9 @@ interface ChessGameApi {
     fun sendEvent(event: ClientGameEvent)
 
     suspend fun fetchAnyJoinedRoomsAvailable(): List<GameRoomDto>
+    suspend fun getCreatedRoomsByMe(): List<GameRoomDto>
+    suspend fun joinRoom(roomID: String)
+    suspend fun createRoom(room: GameRoomDto)
 
     companion object {
         private const val HOST_AND_PORT = "192.168.225.184:8080"

@@ -6,7 +6,7 @@ import com.techullurgy.chess.data.db.TimerEntity
 import com.techullurgy.chess.domain.GameStatus
 import com.techullurgy.chess.domain.PieceColor
 import com.techullurgy.chess.domain.api.ChessGameApi
-import com.techullurgy.chess.domain.events.GameLoadingEvent
+import com.techullurgy.chess.domain.events.GameStartedEvent
 import com.techullurgy.chess.domain.events.GameUpdateEvent
 import com.techullurgy.chess.domain.events.ResetSelectionDoneEvent
 import com.techullurgy.chess.domain.events.SelectionResultEvent
@@ -47,7 +47,7 @@ internal class GameRoomMessageBroker(
             .transform {
                 if(it is ServerGameEvent) {
                     when(it) {
-                        is GameLoadingEvent -> emit(GameLoadingEvent(it.roomId))
+                        is GameStartedEvent -> emit(GameStartedEvent(it.roomId))
                         is GameUpdateEvent -> {
                             val assignedColor = gameDao.getAssignedColor(it.roomId)
                             gameDao.updateGame(
@@ -81,12 +81,16 @@ internal class GameRoomMessageBroker(
 
     suspend fun fetchAnyJoinedRoomsAvailable() {
         val joinedRooms = gameApi.fetchAnyJoinedRoomsAvailable()
+
+        if(joinedRooms.isEmpty()) throw NoGamesFoundException()
+
         joinedRooms.forEach {
             gameDao.insertGame(
                 GameEntity(
                     roomId = it.roomId,
                     roomName = it.roomName,
                     createdBy = "",
+                    isGameStarted = true,
                     board = "",
                     members = "",
                     assignedColor = PieceColor.White,
@@ -101,3 +105,5 @@ internal class GameRoomMessageBroker(
         gameDao.observeJoinedGamesList()
             .distinctUntilChanged()
 }
+
+class NoGamesFoundException: RuntimeException()

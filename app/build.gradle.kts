@@ -83,7 +83,7 @@ dependencies {
     implementation(libs.bundles.ktor)
 
     testImplementation(libs.mockk)
-//    testImplementation(libs.jupiter)
+    testImplementation(libs.turbine)
 }
 
 room {

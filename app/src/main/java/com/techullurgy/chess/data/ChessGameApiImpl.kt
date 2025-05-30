@@ -4,7 +4,7 @@ import com.techullurgy.chess.data.dto.GameRoomDto
 import com.techullurgy.chess.data.events.CellSelection
 import com.techullurgy.chess.data.events.Disconnected
 import com.techullurgy.chess.data.events.EnterRoomHandshake
-import com.techullurgy.chess.data.events.GameLoading
+import com.techullurgy.chess.data.events.GameStarted
 import com.techullurgy.chess.data.events.GameUpdate
 import com.techullurgy.chess.data.events.PieceMove
 import com.techullurgy.chess.data.events.ReceiverBaseEvent
@@ -21,14 +21,16 @@ import com.techullurgy.chess.domain.events.ClientGameEvent
 import com.techullurgy.chess.domain.events.DisconnectedEvent
 import com.techullurgy.chess.domain.events.EnterRoomEvent
 import com.techullurgy.chess.domain.events.GameEvent
-import com.techullurgy.chess.domain.events.GameLoadingEvent
+import com.techullurgy.chess.domain.events.GameStartedEvent
 import com.techullurgy.chess.domain.events.GameUpdateEvent
+import com.techullurgy.chess.domain.events.NetworkLoadingEvent
 import com.techullurgy.chess.domain.events.NetworkNotAvailableEvent
 import com.techullurgy.chess.domain.events.PieceMoveEvent
 import com.techullurgy.chess.domain.events.ResetSelectionDoneEvent
 import com.techullurgy.chess.domain.events.ResetSelectionEvent
 import com.techullurgy.chess.domain.events.SelectionResultEvent
 import com.techullurgy.chess.domain.events.TimerUpdateEvent
+import com.techullurgy.chess.domain.events.UserConnectedEvent
 import com.techullurgy.chess.domain.events.UserDisconnectedEvent
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -63,12 +65,14 @@ internal class ChessGameApiImpl(
     private var eventChannel: Channel<ReceiverBaseEvent> = Channel()
 
     private val sessionConnectionFlow: Flow<GameEvent> = channelFlow<GameEvent> {
+        send(NetworkLoadingEvent)
         launch {
             try {
                 try {
                     session = socketClient.webSocketSession(
                         urlString = "${ChessGameApi.WS_BASE_URL}/join/ws"
                     )
+                    send(UserConnectedEvent)
                 } catch (e: Exception) {
                     send(NetworkNotAvailableEvent)
                     e.printStackTrace()
@@ -90,7 +94,7 @@ internal class ChessGameApiImpl(
 
                         send(
                             when(event) {
-                                is GameLoading -> GameLoadingEvent(event.roomId)
+                                is GameStarted -> GameStartedEvent(event.roomId)
                                 is GameUpdate -> GameUpdateEvent(
                                     event.roomId,
                                     event.board,
@@ -168,6 +172,18 @@ internal class ChessGameApiImpl(
         val response = httpClient.get("${ChessGameApi.HTTP_BASE_URL}/rooms/joined")
         val rooms = response.body<List<GameRoomDto>>()
         return rooms
+    }
+
+    override suspend fun getCreatedRoomsByMe(): List<GameRoomDto> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun joinRoom(roomID: String) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun createRoom(room: GameRoomDto) {
+        TODO("Not yet implemented")
     }
 
     private fun <T> Channel<T>.reset(): Channel<T> {

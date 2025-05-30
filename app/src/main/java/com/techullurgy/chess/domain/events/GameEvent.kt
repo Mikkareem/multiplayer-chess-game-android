@@ -9,7 +9,7 @@ sealed interface ClientGameEvent: GameEvent
 sealed interface NetworkRelatedEvent: GameEvent
 sealed interface UnknownEvent: GameEvent
 
-data class GameLoadingEvent(
+data class GameStartedEvent(
     val roomId: String
 ): ServerGameEvent
 
@@ -64,8 +64,11 @@ data class ResetSelectionEvent(
     val roomId: String
 ): ClientGameEvent
 
+data object RetryFetchingEvent: NetworkRelatedEvent
 data object NetworkNotAvailableEvent: NetworkRelatedEvent
+data object UserConnectedEvent: NetworkRelatedEvent
 data object UserDisconnectedEvent: NetworkRelatedEvent
+data object NetworkLoadingEvent: NetworkRelatedEvent
 data object GameNotAvailableEvent: UnknownEvent
 data object NotYetAnyEventAvailableEvent: UnknownEvent
 data object SomethingWentWrongEvent: UnknownEvent

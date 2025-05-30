@@ -10,6 +10,7 @@ data class GameEntity(
     @PrimaryKey val roomId: String,
     val roomName: String,
     val createdBy: String,
+    val isGameStarted: Boolean,
     val board: String,
     val members: String,
     val assignedColor: PieceColor,

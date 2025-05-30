@@ -29,7 +29,7 @@ data class JoinedGameStateHeaderList(
     val value: List<JoinedGameStateHeader>
 ): GameState
 
-data object JoinedGameLoadingState: GameState
+data object NetworkLoadingState: GameState
 data object GameNotAvailableState: GameState
 data object NetworkNotAvailableState: GameState
 data object SomethingWentWrongState: GameState

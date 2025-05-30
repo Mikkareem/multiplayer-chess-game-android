@@ -1,5 +1,7 @@
 package com.techullurgy.chess.utils
 
+import com.techullurgy.chess.data.events.ReceiverBaseEvent
+import com.techullurgy.chess.data.events.serializers.receiverBaseEventJson
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
 import kotlinx.coroutines.channels.Channel
@@ -24,7 +26,8 @@ class MockWebserver {
             launch {
                 incomingChannel.consumeEach {
                     it as Frame.Text
-                    val received = it.readText()
+                    val received = receiverBaseEventJson.decodeFromString<ReceiverBaseEvent>(it.readText())
+
                     mockings.firstOrNull { it.predicate(received) }?.let {
                         outgoingChannel.send(Frame.Text(it.output))
                     }
@@ -54,5 +57,5 @@ class MockWebserver {
 
 data class Mocking(
     val output: String,
-    val predicate: (String) -> Boolean,
+    val predicate: (ReceiverBaseEvent) -> Boolean,
 )

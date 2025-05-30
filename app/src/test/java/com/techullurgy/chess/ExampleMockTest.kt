@@ -1,14 +1,13 @@
 package com.techullurgy.chess
 
 import com.techullurgy.chess.utils.setPrivateField
-import io.mockk.every
 import io.mockk.spyk
+import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
 class ExampleMockTest {
@@ -19,7 +18,7 @@ class ExampleMockTest {
     fun basicTest() {
         testInterface.setPrivateField("anotherString", flowOf(1029, 9012))
 
-        runTest {
+        runBlocking {
             val result = testInterface.implement()
             assertEquals(listOf("OriginalFake1","MockedAnotherString", "1029", "9012"), result)
         }
